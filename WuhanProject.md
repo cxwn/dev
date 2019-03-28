@@ -48,3 +48,117 @@ sudo docker run -e MODELSPATH="/usr/local/models" -e ENGINE_CONFIG_OVERRIDE="/us
 Speech host:
 
 sudo docker run --privileged --cap-add sys_ptrace --net=host --rm -e SR_URL=localhost:50051 -v /root/MS_ASR/images/SpeechHost:/home/henlin/SpeechHost:z -ti speechhost
+
+## Stop Four Test
+
+SpeechClient.exe -i ../../testAudio -h 13.78.128.75:34932 -l zh-CN -r 16000 –IsRealtime
+
+
+Websocket参数：
+ws://{host}/Transcribe?UseVad={useVad}&IsRealtime={isRealtime}              &AddPunctuation={addPunctuation}&TagKeyword={tagKeyword}&NeedIntermediateResult={needIntermediateResult}
+                
+参数说明：
+参数	说明	示例
+host	Websocket服务主机和端口	192.168.1.1:32934
+UseVad	是否使用VAD断句	UseVad=True
+IsRealtime	是否实时语音识别	IsRealtime=True
+AddPunctuation	是否要在识别结果加标点符号	AddPunctuation=False
+TagKeyword	是否要标出关键字	TagKeyword=False
+NeedIntermediateResult	是否要返回中间识别结果	NeedIntermediateResult=False
+
+示例代码(C#)：
+
+public void Transcribe(string audioPath, string locale, int sampleRate, int batchSize, string host, bool useVad, bool isRealtime, bool addPunctuation, bool tagKeyword, bool needIntermediateResult)
+{
+    Console.WriteLine(du"Start connecting web socket server");
+    string url = $"ws://{host}/Transcribe?UseVad={useVad}&IsRealtime={isRealtime}&AddPunctuation={addPunctuation}&TagKeyword={tagKeyword}&NeedIntermediateResult={needIntermediateResult}";
+
+    webSocket = new WebSocket(url);
+    webSocket.OnMessage += (sender, e) =>
+    {
+        var pack = JsonConvert.DeserializeObject<SocketPackServer>(e.Data);
+        switch (pack.Type)
+        {
+            case MessageType.Sentence:
+                 Console.WriteLine("{0}: {1} ", pack.Type.ToString(), pack.Message);
+                 break;
+            case MessageType.Intermediate:
+                 Console.WriteLine("{0}: {1} ", pack.Type.ToString(), pack.Message);
+                 break;
+            case MessageType.Completion:
+                 Console.WriteLine(GetTimeStamp() + "complete");
+                 break;
+            case MessageType.Error:
+                 Console.WriteLine(GetTimeStamp() + "error {0}", pack.Message);
+                 // Do something
+                 break;
+            default:
+                 Console.WriteLine("Unknow Message type {0}", pack.Type);
+                 break;
+       }
+    };
+
+    webSocket.OnError += (sender, e) =>
+    {
+        // Do something
+    };
+
+    webSocket.OnClose += (sender, e) =>
+    {
+        // Do something
+    };
+     
+    webSocket.Connect();
+
+    Console.WriteLine("Start sending data: {0}", audioPath);
+
+    byte[] audio = File.ReadAllBytes(audioPath);            
+    using (var memStream = new MemoryStream(audio))
+    {
+        int totalBytesRead = 0;
+        int bytesRead = 0;
+
+        int batchLength = audio.Length;
+        if (isRealtime)
+        {
+            batchLength = batchSize;
+        }
+
+        do
+        {                    
+            if (audio.Length - totalBytesRead < batchLength)
+            {
+                batchLength = audio.Length - totalBytesRead;
+            }
+            var buffer = new byte[batchLength];
+            bytesRead = memStream.Read(buffer, 0, buffer.Length);
+            if (bytesRead != 0)
+            {
+                totalBytesRead += bytesRead;
+                var spack = new SocketPackClient();
+                spack.Id = messageId++.ToString();
+                spack.Audio = buffer;
+                spack.Locale = locale;
+                spack.SampleRate = sampleRate;
+                webSocket.Send(JsonConvert.SerializeObject(spack));
+                if (isRealtime)
+                {
+                    Thread.Sleep(10); // sleep to simulate the real scenario
+                }
+            }
+        } while (totalBytesRead < audio.Length);
+    }
+
+    Console.WriteLine("All data sent");
+    // send empty audio to indicate the end of audio stream
+    if (isRealtime)
+    {
+        var spack = new SocketPackClient();
+        spack.Id = messageId++.ToString();
+        spack.Audio = new byte[0];
+        spack.Locale = locale;
+        spack.SampleRate = sampleRate;
+        webSocket.Send(JsonConvert.SerializeObject(spack));
+    }
+    Console.WriteLine("All data sent + end");
+}
