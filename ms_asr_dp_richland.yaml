@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-asr-richland
+  labels:
+    app: richland
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app-1: ms-asr
+  template:
+    metadata:
+      labels:
+        app-1: ms-asr
+    spec:
+      containers:
+      - name: richland
+        image: richland:v1.0
+        imagePullPolicy: Always
+        env:
+        - name: MODELSPATH
+          value: /usr/local/models
+        - name: ENGINE_CONFIG_OVERRIDE
+          value: /usr/local/models/models3.json
+        ports:
+        - containerPort: 50051
+          protocol: TCP
+        volumeMounts:
+        - name: ms-asr-volume
+          mountPath: /usr/local/models
+      - name: speechhost
+        image: speechhost:v1.0
+        imagePullPolicy: Always
+        env:
+        - name: SR_URL
+          value: localhost:50051 
+        volumeMounts:
+        - name: ms-asr-volume
+          mountPath: /home/henlin/SpeechHost
+        ports:
+        - containerPort: 34932
+          protocol: TCP
+      volumes:
+      - name: ms-asr-volume
+        persistentVolumeClaim:
+          claimName: ms-asr-pvc
