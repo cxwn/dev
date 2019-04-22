@@ -11,13 +11,10 @@ def download():
       ip_ports = ip.readlines()
     for ip_port in ip_ports:
       proxies = { "http":"http://" + ip_port.strip('\n') }
-      try:
-        res = requests.get(url, proxies=proxies)
-        if res.status_code == 200 :
-          with open("result.png", 'wb') as out:
-            out.write(res.content)
-      except:
-        continue
+      res = requests.get(url, proxies=proxies)
+      if res.status_code == 200 :
+        with open("result.png", 'wb') as out:
+          out.write(res.content)
 
 if __name__ == "__main__":
   for i in range(cpus):

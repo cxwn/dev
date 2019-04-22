@@ -6,16 +6,8 @@ f = urllib.request.urlopen(req)
 print(f.status)
 print(f.reason)
 
-125.88.146.204
-114.248.118.240
+ip=('125.88.146.204','114.248.118.240')
 
-remote addr: 125.88.146.76:15350
+remote_addr='125.88.146.76:15350'
 
-http://admin.sqqmall.com/download/qssqian.apk
-itms-services://?action=download-manifest&url=https://d.dtvai.com/vtsuser/qssqian/vts.plist
-
-
-IP：119.249.54.252
-远程端口：22
-账号：root
-密码：sxlgXzoJaJfS. 
+url=['http://admin.sqqmall.com/download/qssqian.apk']
