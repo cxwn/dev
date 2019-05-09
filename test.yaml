@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  creationTimestamp: 2019-03-27T08:46:55Z
+  generation: 1
+  labels:
+    app: tts-app
+  name: tts
+  namespace: default
+  resourceVersion: "909177"
+  selfLink: /api/v1/namespaces/default/replicationcontrollers/tts
+  uid: e0324263-506c-11e9-ae61-286ed488cb8f
+spec:
+  replicas: 8
+  selector:
+    app: tts-app
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: tts-app
+    spec:
+      containers:
+      - command:
+        - /run.sh
+        image: 10.163.4.18:5000/grpc_mstts_container:latest
+        imagePullPolicy: Always
+        name: tts-container
+        ports:
+        - containerPort: 50052
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
