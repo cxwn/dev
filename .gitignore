@@ -1,5 +1,5 @@
 .vscode/settings.json
 .vscode/*
-.WuhanProject.md
-.CMCCProject.md
-.env/*
+WuhanProject.md
+CMCCProject.md
+env/*
