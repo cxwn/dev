@@ -1,9 +1,0 @@
-{
-    "python.pythonPath": "C:\\Users\\IVAN DU\\Documents\\dev\\env\\3.6.2\\Scripts\\python.exe",
-    "files.autoSave": "afterDelay",
-    "editor.fontSize": 18,
-    "python.linting.pylintArgs": [
-        "--load-plugins=pylint_django"
-    ],
-    "python.linting.pylintPath": "pylint_django"
-}
