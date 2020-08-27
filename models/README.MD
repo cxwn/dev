@@ -37,3 +37,45 @@ make
 make test
 make install
 ```
+
+```Dockerfile
+FROM centos:7.8.2003
+
+LABEL author="ivandu" e-mail="mrivandu@hotmail.com" version="1.0.20200827" python_version="3.6.8"
+
+RUN set -eux; \
+    yum -y install python3; \
+    pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple pip -U; \
+    pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+```
+
+```Dockerfile
+FROM python:3.6.8
+
+LABEL author="ivandu" e-mail="mrivandu@hotmail.com" version="1.0.20200827" flask_version="1.1.2"
+
+RUN set -eux; \
+    useradd -u 1000 ivandu; \
+    yum -y install vim; \
+    pip install flask==1.1.2
+
+USER 1000
+
+WORKDIR /home/ivandu
+
+RUN set -eux; \
+    sed -i "\$a alias vi='vim'" /home/ivandu/.bashrc; \
+    mkdir dev; \
+    cd dev; \
+    python3 -m venv --without-pip --system-site-packages env
+
+VOLUME /home/ivandu/dev\
+
+EXPOSE 5000
+
+CMD ["/bin/bash"]
+```
+
+```bash
+docker run -it --net host --name flask --hostname devops -v ${PWD}:/home/ivandu/dev flask:1.1.2
+```
